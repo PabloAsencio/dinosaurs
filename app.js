@@ -81,9 +81,6 @@
         return dinos;
     }
 
-    // Create Dino Objects
-    const dinos = (await loadDinos()).map(makeDino);
-
     // Create Human Object
     const human = {
         name: '',
@@ -96,6 +93,10 @@
 
     // Create Dino Compare Method 1
     // NOTE: Weight in JSON file is in lbs, height in inches.
+    // We will generate the final compare methods once the data for
+    // the human object is known. That's why at this point we can only
+    // write higher order functions that will be used to generate those
+    // methods.
     function createWeightComparator(human) {
         return function (dino) {
             let result = '';
@@ -122,9 +123,57 @@
 
     // Create Dino Compare Method 2
     // NOTE: Weight in JSON file is in lbs, height in inches.
+    function createHeightComparator(human) {
+        return function (dino) {
+            let result = '';
+
+            if (Math.abs(dino.height - human.height) < 1) {
+                result = `You are about as tall as ${getArticle(
+                    dino.species
+                )} ${dino.species}.`;
+            } else if (dino.height > human.height) {
+                result = `${getArticle(dino.species, false)} ${
+                    dino.species
+                } is about ${roundToOneDecimalPlace(
+                    dino.height / human.height
+                )} times taller than you.`;
+            } else {
+                result`You are about ${roundToOneDecimalPlace(
+                    human.height / dino.height
+                )} times taller than ${getArticle(dino.species)} ${
+                    dino.species
+                }`;
+            }
+
+            return result;
+        };
+    }
 
     // Create Dino Compare Method 3
     // NOTE: Weight in JSON file is in lbs, height in inches.
+    function createDietComparator(human) {
+        return function (dino) {
+            let result = '';
+            if (human.diet == dino.diet) {
+                result = `Both you and ${getArticle(dino.species)} ${
+                    dino.species
+                } are ${human.diet}s`;
+            } else {
+                result = `You are ${getArticle(human.diet)} ${
+                    human.diet
+                }, whereas ${getArticle(dino.species)} ${
+                    dino.species
+                } is ${getArticle(dino.diet)} ${dino.diet}.`;
+            }
+            return result;
+        };
+    }
+
+    const comparators = {
+        compareWeight: createWeightComparator(human),
+        compareHeight: createHeightComparator(human),
+        compareDiet: createDietComparator(human),
+    };
 
     // Generate Tiles for each Dino in Array
 
@@ -133,6 +182,7 @@
     // Remove form from screen
 
     // On button click, prepare and display infographic
+
     // Helper functions
     function roundToOneDecimalPlace(number) {
         // We use Number.EPSILON to make sure that numbers like 1.05 round correctly
