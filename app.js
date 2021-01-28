@@ -81,6 +81,8 @@
         return dinos;
     }
 
+    const jsonDinos = await loadDinos();
+
     // Create Human Object
     const human = getHuman();
 
@@ -93,6 +95,7 @@
                 document.getElementById('feet') * 12 +
                 document.getElementById('inches'),
             diet: document.getElementById('diet'),
+            image: './images/human.png',
         };
     }
     // Create Dino Compare Method 1
@@ -179,8 +182,30 @@
         compareDiet: createDietComparator(human),
     };
 
-    // Generate Tiles for each Dino in Array
+    const dinos = jsonDinos.map((dino) => makeDino(dino, comparators));
+    const dinosAndHuman = dinos.splice(4, 0, human);
 
+    // Generate Tiles for each Dino in Array
+    const tiles = dinosAndHuman.map(makeTile);
+
+    // animal can be a dinosaur or a human
+    function makeTile(animal) {
+        const tile = document.createElement('DIV');
+        tile.classList.add('grid-item');
+        const heading = document.createElement('H3');
+        heading.textContent = animal.species ? animal.species : animal.name;
+        const image = document.createElement('IMG');
+        image.src = animal.image;
+        image.alt = animal.species ? animal.species : animal.name;
+        tile.appendChild(heading);
+        tile.appendChild(image);
+        if (animal.fact) {
+            const paragraph = document.createElement('P');
+            paragraph.textContent = animal.fact;
+            tile.appendChild(paragraph);
+        }
+        return tile;
+    }
     // Add tiles to DOM
 
     // Remove form from screen
