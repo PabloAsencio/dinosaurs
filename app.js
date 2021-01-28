@@ -29,14 +29,14 @@
         function populateFacts() {
             const facts = [
                 `The ${dinoData.species} weighed around ${dinoData.weight} lbs.`,
-                `The height of a${
-                    /^[AEIOU]/.test(dinoData.species) ? 'n' : ''
-                } ${dinoData.species} was ${dinoData.height} inches.`,
+                `The height of ${getArticle(dinoData.species)} ${
+                    dinoData.species
+                } was ${dinoData.height} inches.`,
                 `The ${dinoData.species} lived in ${dinoData.where}.`,
                 `It lived during the ${dinoData.when}.`,
-                `The ${dinoData.species} was a${
-                    dinoData.diet == 'omnivore' ? 'n' : ''
-                } ${dinoData.diet}.`,
+                `The ${dinoData.species} was ${getArticle(dinoData.diet)} ${
+                    dinoData.diet
+                }.`,
                 dinoData.fact,
             ];
             // We pass the full dinoData object as an argument
@@ -85,11 +85,40 @@
     const dinos = (await loadDinos()).map(makeDino);
 
     // Create Human Object
+    const human = {
+        name: '',
+        weight: 0,
+        height: 0,
+        diet: 'omnivore',
+    };
 
     // Use IIFE to get human data from form
 
     // Create Dino Compare Method 1
     // NOTE: Weight in JSON file is in lbs, height in inches.
+    function createWeightComparator(human) {
+        return function (dino) {
+            let result = '';
+            if (Math.abs(dino.weight - human.weight) < 10) {
+                result = `You are about as heavy as ${getArticle(
+                    dino.species
+                )} ${dino.species}.`;
+            } else if (dino.weight > human.weight) {
+                result = `${getArticle(dino.species, false)} ${
+                    dino.species
+                } is about ${roundToOneDecimalPlace(
+                    dino.weight / human.weight
+                )} times as heavy as you.`;
+            } else {
+                result`You are about ${roundToOneDecimalPlace(
+                    human.weight / dino.weight
+                )} times as heavy as ${getArticle(dino.species)} ${
+                    dino.species
+                }`;
+            }
+            return result;
+        };
+    }
 
     // Create Dino Compare Method 2
     // NOTE: Weight in JSON file is in lbs, height in inches.
@@ -104,4 +133,18 @@
     // Remove form from screen
 
     // On button click, prepare and display infographic
+    // Helper functions
+    function roundToOneDecimalPlace(number) {
+        // We use Number.EPSILON to make sure that numbers like 1.05 round correctly
+        // See https://stackoverflow.com/questions/11832914/round-to-at-most-2-decimal-places-only-if-necessary
+        return Math.round((number + Number.EPSILON) * 10) / 10;
+    }
+
+    function getArticle(name, isLowerCase = true) {
+        return `${isLowerCase ? 'a' : 'A'}${startsWithVowel(name) ? 'n' : ''}`;
+    }
+
+    function startsWithVowel(name) {
+        return /^[AEIOUaeiou]/.test(name);
+    }
 })();
