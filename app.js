@@ -31,7 +31,11 @@
                 `The ${dinoData.species} weighed around ${dinoData.weight} lbs.`,
                 `The height of ${getArticle(dinoData.species)} ${
                     dinoData.species
-                } was ${dinoData.height} inches.`,
+                } was ${Math.floor(dinoData.height / 12)} feet ${
+                    dinoData.height % 12 != 0
+                        ? 'and ' + (dinoData.height % 12) + ' inches'
+                        : ''
+                }.`,
                 `The ${dinoData.species} lived in ${dinoData.where}.`,
                 `It lived during the ${dinoData.when}.`,
                 `The ${dinoData.species} was ${getArticle(dinoData.diet)} ${
@@ -44,7 +48,7 @@
             // The comparators are always specific to one human being, so there is no need
             // to specify any data for them.
             for (const comparator in comparators) {
-                facts.push(comparator(dinoData));
+                facts.push(comparators[comparator](dinoData));
             }
             return facts;
         }
@@ -83,18 +87,15 @@
 
     const jsonDinos = await loadDinos();
 
-    // Create Human Object
-    const human = getHuman();
-
     // Get human data from form
     function getHuman() {
         return {
             name: document.getElementById('name').value,
             weight: document.getElementById('weight').value,
             height:
-                document.getElementById('feet') * 12 +
-                document.getElementById('inches'),
-            diet: document.getElementById('diet'),
+                Number.parseInt(document.getElementById('feet').value) * 12 +
+                Number.parseInt(document.getElementById('inches').value),
+            diet: document.getElementById('diet').value,
             image: './images/human.png',
         };
     }
@@ -114,11 +115,11 @@
             } else if (dino.weight > human.weight) {
                 result = `${getArticle(dino.species, false)} ${
                     dino.species
-                } is about ${roundToOneDecimalPlace(
+                } was about ${roundToOneDecimalPlace(
                     dino.weight / human.weight
                 )} times as heavy as you.`;
             } else {
-                result`You are about ${roundToOneDecimalPlace(
+                result = `You are about ${roundToOneDecimalPlace(
                     human.weight / dino.weight
                 )} times as heavy as ${getArticle(dino.species)} ${
                     dino.species
@@ -141,11 +142,12 @@
             } else if (dino.height > human.height) {
                 result = `${getArticle(dino.species, false)} ${
                     dino.species
-                } is about ${roundToOneDecimalPlace(
+                } was about ${roundToOneDecimalPlace(
                     dino.height / human.height
                 )} times taller than you.`;
             } else {
-                result`You are about ${roundToOneDecimalPlace(
+                console.log(human.height);
+                result = `You are about ${roundToOneDecimalPlace(
                     human.height / dino.height
                 )} times taller than ${getArticle(dino.species)} ${
                     dino.species
@@ -161,32 +163,45 @@
     function createDietComparator(human) {
         return function (dino) {
             let result = '';
-            if (human.diet == dino.diet) {
+            if (human.diet.toLowerCase() == dino.diet.toLowerCase()) {
                 result = `Both you and ${getArticle(dino.species)} ${
                     dino.species
-                } are ${human.diet}s`;
+                } are ${dino.diet.toLowerCase()}s`;
             } else {
-                result = `You are ${getArticle(human.diet)} ${
+                result = `You are ${getArticle(
                     human.diet
-                }, whereas ${getArticle(dino.species)} ${
+                )} ${human.diet.toLowerCase()}, whereas ${getArticle(
                     dino.species
-                } is ${getArticle(dino.diet)} ${dino.diet}.`;
+                )} ${dino.species} was ${getArticle(
+                    dino.diet
+                )} ${dino.diet.toLowerCase()}.`;
             }
             return result;
         };
     }
 
-    const comparators = {
-        compareWeight: createWeightComparator(human),
-        compareHeight: createHeightComparator(human),
-        compareDiet: createDietComparator(human),
-    };
+    function handleSubmit() {
+        // Create Human Object
+        const human = getHuman();
+        const comparators = {
+            compareWeight: createWeightComparator(human),
+            compareHeight: createHeightComparator(human),
+            compareDiet: createDietComparator(human),
+        };
+        const dinos = jsonDinos.map((dino) => makeDino(dino, comparators));
+        dinos.splice(4, 0, human);
+        // Generate Tiles for each Dino in Array
+        const tiles = dinos.map((animal) => makeTile(animal));
 
-    const dinos = jsonDinos.map((dino) => makeDino(dino, comparators));
-    const dinosAndHuman = dinos.splice(4, 0, human);
+        // Add tiles to DOM
+        const grid = document.getElementById('grid');
+        const fragment = document.createDocumentFragment();
+        tiles.forEach((tile) => fragment.appendChild(tile));
+        grid.appendChild(fragment);
 
-    // Generate Tiles for each Dino in Array
-    const tiles = dinosAndHuman.map(makeTile);
+        // Remove form from screen
+        document.getElementById('dino-compare').style = 'display: none';
+    }
 
     // animal can be a dinosaur or a human
     function makeTile(animal) {
@@ -206,11 +221,9 @@
         }
         return tile;
     }
-    // Add tiles to DOM
-
-    // Remove form from screen
 
     // On button click, prepare and display infographic
+    document.getElementById('btn').addEventListener('click', handleSubmit);
 
     // Helper functions
     function roundToOneDecimalPlace(number) {
