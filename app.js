@@ -1,6 +1,53 @@
 // The whole code is enclosed in an IIFE so that we can declare it
 // as async and use await to load the json file.
 (async function () {
+    // Load dinos from json file
+    // Since the dinosaur data doesn't change, we fetch them at page load
+    // instead of inside handleSubmit to make sure we only fetch them once
+    const jsonDinos = await loadDinos();
+    // On button click, prepare and display infographic
+    document.getElementById('btn').addEventListener('click', handleSubmit);
+
+    // Fetch dino json data
+    async function loadDinos() {
+        const dinos = await fetch('/dino.json')
+            .then((response) => response.json())
+            .then((data) => data['Dinos'])
+            .catch((error) => {
+                // TODO: create the error--load element in the view and style it in css.
+                document.getElementById('error--load').textContent =
+                    'There was a problem while loading the data. Please refresh the page!';
+            });
+        return dinos;
+    }
+
+    // Main event handler
+    function handleSubmit() {
+        // Create Human Object
+        const human = getHuman();
+        // The methods in the comparators object will allow us to compare the human object with a dinosaur object
+        const comparators = {
+            compareWeight: createWeightComparator(human),
+            compareHeight: createHeightComparator(human),
+            compareDiet: createDietComparator(human),
+        };
+        // Create dino objects
+        const dinos = jsonDinos.map((dino) => makeDino(dino, comparators));
+        // The human is supposed to be at the center of the grid, so we insert it right in the middle of the array
+        dinos.splice(4, 0, human);
+        // Generate Tiles for each Dino in Array
+        const tiles = dinos.map((animal) => makeTile(animal));
+
+        // Add tiles to DOM
+        const grid = document.getElementById('grid');
+        const fragment = document.createDocumentFragment();
+        tiles.forEach((tile) => fragment.appendChild(tile));
+        grid.appendChild(fragment);
+
+        // Remove form from screen
+        document.getElementById('dino-compare').style = 'display: none';
+    }
+
     // Create Dino Constructor
     // comparators is an object that contains several methods to compare a
     // dinosaur to a particular human being
@@ -8,7 +55,7 @@
         const _species = dinoData.species;
         const _image = `./images/${dinoData.species.toLowerCase()}.png`;
         const _data = dinoData;
-        const _facts = populateFacts();
+        const _facts = createFacts();
 
         // This function returns a fact about the dinosaur.
         // According to the specification this fact must always be the same
@@ -26,7 +73,7 @@
             return result;
         }
 
-        function populateFacts() {
+        function createFacts() {
             const facts = [
                 `The ${dinoData.species} weighed around ${dinoData.weight} lbs.`,
                 `The height of ${getArticle(dinoData.species)} ${
@@ -72,22 +119,8 @@
             },
         };
     }
-    // Create Dino Objects
-    async function loadDinos() {
-        const dinos = await fetch('/dino.json')
-            .then((response) => response.json())
-            .then((data) => data['Dinos'])
-            .catch((error) => {
-                // TODO: create the error--load element in the view and style it in css.
-                document.getElementById('error--load').textContent =
-                    'There was a problem while loading the data. Please refresh the page!';
-            });
-        return dinos;
-    }
 
-    const jsonDinos = await loadDinos();
-
-    // Get human data from form
+    // Get human data from the form
     function getHuman() {
         return {
             name: document.getElementById('name').value,
@@ -100,7 +133,7 @@
         };
     }
     // Create Dino Compare Method 1
-    // NOTE: Weight in JSON file is in lbs, height in inches.
+    // NOTE: Weight in JSON file is in lbs.
     // We will generate the final compare methods once the data for
     // the human object is known. That's why at this point we can only
     // write higher order functions that will be used to generate those
@@ -130,7 +163,7 @@
     }
 
     // Create Dino Compare Method 2
-    // NOTE: Weight in JSON file is in lbs, height in inches.
+    // NOTE: Height in JSON file is in inches.
     function createHeightComparator(human) {
         return function (dino) {
             let result = '';
@@ -159,7 +192,6 @@
     }
 
     // Create Dino Compare Method 3
-    // NOTE: Weight in JSON file is in lbs, height in inches.
     function createDietComparator(human) {
         return function (dino) {
             let result = '';
@@ -178,29 +210,6 @@
             }
             return result;
         };
-    }
-
-    function handleSubmit() {
-        // Create Human Object
-        const human = getHuman();
-        const comparators = {
-            compareWeight: createWeightComparator(human),
-            compareHeight: createHeightComparator(human),
-            compareDiet: createDietComparator(human),
-        };
-        const dinos = jsonDinos.map((dino) => makeDino(dino, comparators));
-        dinos.splice(4, 0, human);
-        // Generate Tiles for each Dino in Array
-        const tiles = dinos.map((animal) => makeTile(animal));
-
-        // Add tiles to DOM
-        const grid = document.getElementById('grid');
-        const fragment = document.createDocumentFragment();
-        tiles.forEach((tile) => fragment.appendChild(tile));
-        grid.appendChild(fragment);
-
-        // Remove form from screen
-        document.getElementById('dino-compare').style = 'display: none';
     }
 
     // animal can be a dinosaur or a human
@@ -222,9 +231,6 @@
         return tile;
     }
 
-    // On button click, prepare and display infographic
-    document.getElementById('btn').addEventListener('click', handleSubmit);
-
     // Helper functions
     function roundToOneDecimalPlace(number) {
         // We use Number.EPSILON to make sure that numbers like 1.05 round correctly
@@ -232,6 +238,10 @@
         return Math.round((number + Number.EPSILON) * 10) / 10;
     }
 
+    // It returns the correct indefinite article (a/an) for a noun.
+    // Note that it is a naive implementation that works fine
+    // for the given subset of words, but will not provide
+    // correct results for a bigger set.
     function getArticle(name, isLowerCase = true) {
         return `${isLowerCase ? 'a' : 'A'}${startsWithVowel(name) ? 'n' : ''}`;
     }
