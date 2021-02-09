@@ -157,6 +157,10 @@ input {
     box-sizing: border-box;
 }
 
+.form--invisible {
+    display: none;
+}
+
 select {
     display: block;
 }

@@ -250,7 +250,9 @@
         grid.appendChild(fragment);
 
         // Remove form from screen
-        document.getElementById('dino-compare').style = 'display: none';
+        document
+            .getElementById('dino-compare')
+            .classList.add('form--invisible');
     }
 
     // *** SET UP AND LAUNCH APPLICATION ***
