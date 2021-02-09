@@ -220,8 +220,7 @@
             .then((response) => response.json())
             .then((data) => data['Dinos'])
             .catch((error) => {
-                // TODO: create the error--load element in the view and style it in css.
-                document.getElementById('error--load').textContent =
+                document.getElementById('error').textContent =
                     'There was a problem while loading the data. Please refresh the page!';
             });
         return dinos;
