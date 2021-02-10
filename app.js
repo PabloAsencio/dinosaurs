@@ -24,6 +24,11 @@
         return `${isLowerCase ? 'a' : 'A'}${startsWithVowel(name) ? 'n' : ''}`;
     }
 
+    // It returns true if the user input is a number greater than zero
+    function validateUserInput(number) {
+        return !isNaN(number) && number > 0;
+    }
+
     // --- Factory functions ---
     // Get human data from the form
     function makeHuman() {
@@ -227,31 +232,40 @@
 
     // Main event handler. It removes the form and displays the tiles with the dinosaurs information.
     function handleSubmit() {
+        document.getElementById('error').textContent = '';
         // Create Human Object
         const human = makeHuman();
-        // The methods in the comparators object will allow us to compare the human object with a dinosaur object
-        const comparators = {
-            compareWeight: createWeightComparator(human),
-            compareHeight: createHeightComparator(human),
-            compareDiet: createDietComparator(human),
-        };
-        // Create dino objects
-        const dinos = jsonDinos.map((dino) => makeDino(dino, comparators));
-        // The human is supposed to be at the center of the grid, so we insert it right in the middle of the array
-        dinos.splice(4, 0, human);
-        // Generate Tiles for each Dino in Array
-        const tiles = dinos.map((animal) => makeTile(animal));
+        if (
+            validateUserInput(human.weight) &&
+            validateUserInput(human.height)
+        ) {
+            // The methods in the comparators object will allow us to compare the human object with a dinosaur object
+            const comparators = {
+                compareWeight: createWeightComparator(human),
+                compareHeight: createHeightComparator(human),
+                compareDiet: createDietComparator(human),
+            };
+            // Create dino objects
+            const dinos = jsonDinos.map((dino) => makeDino(dino, comparators));
+            // The human is supposed to be at the center of the grid, so we insert it right in the middle of the array
+            dinos.splice(4, 0, human);
+            // Generate Tiles for each Dino in Array
+            const tiles = dinos.map((animal) => makeTile(animal));
 
-        // Add tiles to DOM
-        const grid = document.getElementById('grid');
-        const fragment = document.createDocumentFragment();
-        tiles.forEach((tile) => fragment.appendChild(tile));
-        grid.appendChild(fragment);
+            // Add tiles to DOM
+            const grid = document.getElementById('grid');
+            const fragment = document.createDocumentFragment();
+            tiles.forEach((tile) => fragment.appendChild(tile));
+            grid.appendChild(fragment);
 
-        // Remove form from screen
-        document
-            .getElementById('dino-compare')
-            .classList.add('form--invisible');
+            // Remove form from screen
+            document
+                .getElementById('dino-compare')
+                .classList.add('form--invisible');
+        } else {
+            document.getElementById('error').textContent =
+                'Weight and height must be numbers greater than zero';
+        }
     }
 
     // *** SET UP AND LAUNCH APPLICATION ***
