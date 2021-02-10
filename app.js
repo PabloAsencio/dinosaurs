@@ -232,9 +232,22 @@
 
     // Main event handler. It removes the form and displays the tiles with the dinosaurs information.
     function handleSubmit() {
+        // Reset error message
         document.getElementById('error').textContent = '';
         // Create Human Object
-        const human = makeHuman();
+        const human = (function makeHuman() {
+            return {
+                name: document.getElementById('name').value,
+                weight: document.getElementById('weight').value,
+                height:
+                    Number.parseInt(document.getElementById('feet').value) *
+                        12 +
+                    Number.parseInt(document.getElementById('inches').value),
+                diet: document.getElementById('diet').value,
+                image: './images/human.png',
+            };
+        })();
+
         if (
             validateUserInput(human.weight) &&
             validateUserInput(human.height)
