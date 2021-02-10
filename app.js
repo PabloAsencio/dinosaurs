@@ -87,7 +87,6 @@
                     dino.height / human.height
                 )} times taller than you.`;
             } else {
-                console.log(human.height);
                 result = `You are about ${roundToOneDecimalPlace(
                     human.height / dino.height
                 )} times taller than ${getArticle(dino.species)} ${
